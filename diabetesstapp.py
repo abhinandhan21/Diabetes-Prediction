@@ -6,18 +6,18 @@ import json
 API_URLBASE = os.getenv("API_URLBASE")
 API_KEY = os.getenv("API_KEY")
 
-def execute_prediction_request(embarazos: int, glucosa: float, presion_arterial: float, espesor_piel: float,
-                                insulina: float, imc: float, diabetes_pedigree_function: float, edad: int) -> bool:
+def execute_prediction_request(pregnancies: int, glucose: float, blood_pressure: float, skin_thickness: float,
+                                insulin: float, bmi: float, diabetes_pedigree_function: float, age: int) -> bool:
 
     payload = {
-        'embarazos': embarazos,
-        'glucosa': glucosa,
-        'presion_arterial': presion_arterial,
-        'espesor_piel': espesor_piel,
-        'insulina': insulina,
-        'imc': imc,
+        'pregnancies': pregnancies,
+        'glucose': glucose,
+        'blood_pressure': blood_pressure,
+        'skin_thickness': skin_thickness,
+        'insulin': insulin,
+        'bmi': bmi,
         'diabetes_pedigree_function': diabetes_pedigree_function,
-        'edad': edad
+        'age': age
     }
     
     headers_dict = {'x-api-key': API_KEY}
@@ -25,7 +25,7 @@ def execute_prediction_request(embarazos: int, glucosa: float, presion_arterial:
     response = requests.post(API_URLBASE + '/diabetes-predictions', headers=headers_dict, data=json.dumps(payload))
     
     if response.status_code == 201:       
-        return response.json().get('tiene_diabetes')
+        return response.json().get('has_diabetes')
     else:
         response.raise_for_status()
 
@@ -33,33 +33,33 @@ def execute_prediction_request(embarazos: int, glucosa: float, presion_arterial:
 header_container = st.container()
 
 with header_container:
-    st.title('Formulario de Predicción de Diabetes')
-    st.write('Llene el siguiente formulario y compruebe un posible caso de Diabetes')
+    st.title('Diabetes Prediction Form')
+    st.write('Fill in the following form to check for a possible case of Diabetes')
     
 
 with st.form(key='diabetes-pred-form'):
     col1, col2 = st.columns(2)
     
-    embarazos = col1.slider(label='Nro. de Embarazos:', min_value=0, max_value=15)
-    glucosa = col1.text_input(label='Glucosa:')
-    presion_arterial = col1.text_input(label='Presión Arterial:')
-    espesor_piel = col1.text_input(label='Espesor Piel:')
-    insulina = col2.text_input(label='Insulina:')
-    imc = col2.text_input(label='Indice Masa Corporal:')
-    diabetes_pedigree = col2.text_input(label='Función Diabetes Pedigree:')
-    edad = col2.slider(label='Edad:', min_value=1, max_value=120)
+    pregnancies = col1.slider(label='Number of Pregnancies:', min_value=0, max_value=15)
+    glucose = col1.text_input(label='Glucose:')
+    blood_pressure = col1.text_input(label='Blood Pressure:')
+    skin_thickness = col1.text_input(label='Skin Thickness:')
+    insulin = col2.text_input(label='Insulin:')
+    bmi = col2.text_input(label='Body Mass Index (BMI):')
+    diabetes_pedigree = col2.text_input(label='Diabetes Pedigree Function:')
+    age = col2.slider(label='Age:', min_value=1, max_value=120)
     
     submit = st.form_submit_button(label='Check')
     
     if submit:
         try:
-            tiene_diabetes = execute_prediction_request(embarazos, glucosa, presion_arterial, espesor_piel,
-                                                        insulina, imc, diabetes_pedigree, edad)
+            has_diabetes = execute_prediction_request(pregnancies, glucose, blood_pressure, skin_thickness,
+                                                      insulin, bmi, diabetes_pedigree, age)
             
-            if tiene_diabetes:
-                st.error('Los datos ingresados infieren un caso de Diabetes POSITIVO!')
+            if has_diabetes:
+                st.error('The entered data suggests a POSITIVE case of Diabetes!')
             else:
-                st.success('Los datos ingresados infieren un caso de Diabetes NEGATIVO!')
+                st.success('The entered data suggests a NEGATIVE case of Diabetes!')
                 
         except requests.exceptions.RequestException as ex:
-            st.error('Oops!! Algo salió mal en la comunicación con el servicio de predicción.')
+            st.error('Oops!! Something went wrong in communicating with the prediction service.')
